@@ -22,12 +22,16 @@ jobs:
     steps:
       - name: AWS SSM Param Store
         id: ssm
-        uses: ben-poole/param-store-javascript-action@v1
+        uses: ben-poole/param-store-javascript-action@v3
         with:
           action: ${{ github.event.inputs.action }}
           param-name: ${{ github.event.inputs.param-name }}
           param-value: ${{ github.event.inputs.param-value }}
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Get the param output
-        run: echo "The time was ${{ steps.ssm.outputs.param-value }}"
+        run: echo "The param value ${{ steps.ssm.outputs.param-value }}"
         
   
