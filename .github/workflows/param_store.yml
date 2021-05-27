@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: AWS SSM Param Store
         id: ssm
-        uses: ben-poole/param-store-javascript-action@v4
+        uses: ben-poole/param-store-javascript-action@v5
         with:
           action: ${{ github.event.inputs.action }}
           param-name: ${{ github.event.inputs.param-name }}
