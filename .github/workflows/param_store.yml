@@ -1,0 +1,33 @@
+name: AWS SSM Param Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "'get' or 'put'"
+        required: true
+        default: "get"
+      param-name:
+        description: "The name of the parameter to Get or Put"
+        required: true
+      param-value:
+        description: "The value of the parameter to set (Put only)"
+
+jobs:
+  ssm_job:
+    runs-on: ubuntu-latest
+    environment: 
+      name: Development
+    name: AWS SSM Param Store
+    steps:
+      - name: AWS SSM Param Store
+        id: ssm
+        uses: ben-poole/param-store-javascript-action@v1
+        with:
+          action: ${{ github.event.inputs.action }}
+          param-name: ${{ github.event.inputs.param-name }}
+          param-value: ${{ github.event.inputs.param-value }}
+      - name: Get the param output
+        run: echo "The time was ${{ steps.ssm.outputs.param-value }}"
+        
+  
