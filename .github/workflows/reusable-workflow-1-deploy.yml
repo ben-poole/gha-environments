@@ -11,9 +11,11 @@ on:
         type: string
     secrets:
       AWS_ACCESS_KEY_ID:
-        required: false
+        required: true
+        type: string
       AWS_SECRET_ACCESS_KEY:
-        required: false
+        required: true
+        type: string
 
 jobs:
   deploy:
