@@ -28,6 +28,9 @@ jobs:
       AWS_DEFAULT_REGION: ${{ inputs.AWS_DEFAULT_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    # Map the step outputs to job outputs
+    outputs:
+      output1: ${{ steps.output1.outputs.output1 }}
     steps:
       - name: Deploy
         id: deploy
@@ -35,4 +38,7 @@ jobs:
       - name: Sts
         id: sts
         run: aws sts get-caller-identity
+      - name: Output
+        id: output1
+        run: echo "::set-output name=output1::hello"
         
