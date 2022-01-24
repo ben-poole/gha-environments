@@ -4,10 +4,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-workflow-passing-data:
+  deploy-dev:
     uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
     with:
       username: mona
       environment: Development
+    secrets:
+      envPAT: ${{ secrets.REPO_SECRET }}
+  
+  deploy-staging:
+    needs: [ deploy-dev ]
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
+    with:
+      username: mona
+      environment: Staging
     secrets:
       envPAT: ${{ secrets.REPO_SECRET }}

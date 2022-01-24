@@ -18,9 +18,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-
     steps:
       - name: Deploy
         id: deploy
-        run: echo I am deploying! ${{ inputs.username }}  ${{ secrets.ENV_SECRET }}
+        run: echo I am deploying! ${{ inputs.username }} ENV_SECRET ${{ secrets.ENV_SECRET }}
         
