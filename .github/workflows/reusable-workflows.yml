@@ -7,16 +7,18 @@ jobs:
   deploy-dev:
     uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
     with:
-      username: mona
+      AWS_DEFAULT_REGION: eu-west-1
       environment: Development
     secrets:
-      envPAT: ${{ secrets.REPO_SECRET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   
   deploy-staging:
     needs: [ deploy-dev ]
     uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
     with:
-      username: mona
+      AWS_DEFAULT_REGION: eu-west-1
       environment: Staging
     secrets:
-      envPAT: ${{ secrets.REPO_SECRET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
