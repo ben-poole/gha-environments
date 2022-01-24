@@ -1,0 +1,14 @@
+name: Reusable Workflows Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-workflow-passing-data:
+    runs-on: ubuntu-latest
+    environment: Development
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
+    with:
+      username: mona
+    secrets:
+      envPAT: ${{ secrets.REPO_SECRET }}

@@ -1,0 +1,20 @@
+name: RW1 - Deploy
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        required: true
+        type: string
+    secrets:
+      envPAT:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    steps:
+      - name: Deploy
+        id: deploy
+        run: echo I am deploying! ${{ inputs.username }}
+        
