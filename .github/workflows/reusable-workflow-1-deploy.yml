@@ -17,9 +17,18 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment:
+      name: ${{ inputs.environment }}
+    timeout-minutes: 10
+    env:
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Deploy
         id: deploy
         run: echo I am deploying! ${{ inputs.username }} ENV_SECRET ${{ secrets.ENV_SECRET }}
+      - name: Sts
+        id: sts
+        run: aws sts get-caller-identity
         
