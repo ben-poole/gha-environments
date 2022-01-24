@@ -8,5 +8,6 @@ jobs:
     uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
     with:
       username: mona
+      environment: Development
     secrets:
       envPAT: ${{ secrets.REPO_SECRET }}
