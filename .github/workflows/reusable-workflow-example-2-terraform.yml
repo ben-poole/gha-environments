@@ -23,6 +23,10 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+    outputs:
+      output1:
+        description: "output1"
+        value: ${{ jobs.terraform.outputs.output1 }}
 
 jobs:
   terraform:
@@ -44,7 +48,12 @@ jobs:
       TERRAFORM_BACKEND_REGION: "eu-west-1"
       TF_VAR_lambda_s3_bucket_name: ${{ inputs.TF_VAR_lambda_s3_bucket_name }}
       TF_VAR_lambda_s3_bucket_path: ${{ inputs.TF_VAR_lambda_s3_bucket_path }}
+    outputs:
+      output1: ${{ steps.output1.outputs.output1 }}      
     steps:
+      - name: Output Example
+        id: output1
+        run: echo "::set-output name=output1::hello output"
 
       - name: Checkout
         uses: actions/checkout@v2.3.5
