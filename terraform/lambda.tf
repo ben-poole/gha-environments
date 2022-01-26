@@ -45,12 +45,12 @@ resource "aws_lambda_function" "user_api" {
 
   environment {
     variables = {
-      APP_VERSION                 = "0.0.1"
-      NODE_ENV                    = var.environment
+      APP_VERSION = "0.0.1"
+      NODE_ENV    = var.environment
     }
   }
 
-  depends_on = [ aws_cloudwatch_log_group.lambda ]
+  depends_on = [aws_cloudwatch_log_group.lambda]
 }
 
 // The current version of the lambda
