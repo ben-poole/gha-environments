@@ -51,10 +51,6 @@ jobs:
     outputs:
       output1: ${{ steps.output1.outputs.output1 }}      
     steps:
-      - name: Output Example
-        id: output1
-        run: echo "::set-output name=output1::hello output"
-
       - name: Checkout
         uses: actions/checkout@v2.3.5
         with:
@@ -91,3 +87,7 @@ jobs:
         if: inputs.TERRAFORM_ACTION == 'APPLY'
         id: apply
         run: terraform apply -var-file="variables/${{ env.TERRAFORM_TF_VARS_FILE }}" -auto-approve
+
+      - name: Output Example
+        id: output1
+        run: echo "::set-output name=output1::hello output"
