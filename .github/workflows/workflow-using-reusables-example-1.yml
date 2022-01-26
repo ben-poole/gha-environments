@@ -1,11 +1,11 @@
-name: Reusable Workflows Example
+name: Reusable Workflows Example 1
 
 on:
   workflow_dispatch:
 
 jobs:
   deploy-dev:
-    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-1.yml@main
     with:
       AWS_DEFAULT_REGION: eu-west-1
       environment: Development
@@ -21,7 +21,7 @@ jobs:
 
   deploy-staging:
     needs: [ deploy-dev ]
-    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-1-deploy.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-1.yml@main
     with:
       AWS_DEFAULT_REGION: eu-west-1
       environment: Staging

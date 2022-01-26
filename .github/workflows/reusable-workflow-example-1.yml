@@ -1,4 +1,4 @@
-name: RW1 - Deploy
+name: RW - Example 1
 
 on:
   workflow_call:

@@ -1,0 +1,84 @@
+name: RW - Example 2 - Terraform
+
+on:
+  workflow_call:
+    inputs:
+      TERRAFORM_ACTION:
+        required: true
+        type: string
+      GHA_ENVIRONMENT:
+        required: true
+        type: string
+      TERRAFORM_ENVIRONMENT:
+        required: true
+        type: string
+      TF_VAR_lambda_s3_bucket_name:
+        required: true
+        type: string
+      TF_VAR_lambda_s3_bucket_path:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    environment:
+      name: ${{ inputs.GHA_ENVIRONMENT }}
+    timeout-minutes: 10
+    env:
+      AWS_DEFAULT_REGION: "eu-west-1"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TERRAFORM_BACKEND_BUCKET: "gha-envs-example-tf-state-bucket-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+      TERRAFORM_BACKEND_PATH: "gha-envs-example-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+      TERRAFORM_TF_VARS_FILE: "${{ inputs.TERRAFORM_ENVIRONMENT }}.tfvars"
+      TERRAFORM_BACKEND_REGION: "eu-west-1"
+      TF_VAR_lambda_s3_bucket_name: ${{ inputs.TF_VAR_lambda_s3_bucket_name }}
+      TF_VAR_lambda_s3_bucket_path: ${{ inputs.TF_VAR_lambda_s3_bucket_path }}
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.0
+
+      # Check whether the configuration has been properly formatted
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      # Initializes the configuration
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="bucket=${{ env.TERRAFORM_BACKEND_BUCKET }}" -backend-config="key=${{ env.TERRAFORM_BACKEND_PATH }}" -backend-config="region=${{ env.TERRAFORM_BACKEND_REGION }}" -force-copy  
+
+      # Validates the configuration
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      # Generate a Terraform plan
+      - name: Terraform Plan
+        if: inputs.TERRAFORM_ACTION == 'PLAN'
+        id: plan
+        run: terraform plan -var-file="variables/${{ env.TERRAFORM_TF_VARS_FILE }}"
+      
+      # Apply Terraform
+      - name: Terraform Apply
+        if: inputs.TERRAFORM_ACTION == 'APPLY'
+        id: apply
+        run: terraform apply -var-file="variables/${{ env.TERRAFORM_TF_VARS_FILE }}" -auto-approve

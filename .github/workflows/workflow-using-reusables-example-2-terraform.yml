@@ -1,0 +1,163 @@
+name: Reusable Workflows Example 2 - Build and Deploy (LATEST)
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  _0_build:
+    name: 0. Build, Audit and Test
+    runs-on: ubuntu-latest
+    env:
+      LAMBDA_S3_BUCKET_NAME: "gha-envs-example-artifacts"
+    timeout-minutes: 5
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+        with:
+          persist-credentials: false
+
+      - name: Extract info
+        run: |
+          echo "##[set-output name=sha;]$(git log --oneline --format=format:%h -- . | head -1)"
+        id: extract_info
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Build
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.CUSTOM_PAT }}" >> ~/.npmrc
+          echo "@ben-poole:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+          rm -rf ./node_modules/ && rm -rf ./dist/
+          npm run clean
+          npm ci
+          npm run build
+
+      #- name: Audit
+      #  run: |
+      #    @todo npm/yarn audit
+
+      #- name: Test
+      #  run: |
+      #    npx jest
+      #    echo "Exited with '$?'"
+
+      - name: Package
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.BUILD_USER_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BUILD_USER_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          npm prune --production
+          cp -r node_modules dist/
+          cd dist/
+          zip ../my-lambda-${{ steps.extract_info.outputs.sha }}.zip * -r
+          cd ../
+          rm -rf dist/
+
+      - name: Upload to S3
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.BUILD_USER_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BUILD_USER_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws s3 cp my-lambda-${{ steps.extract_info.outputs.sha }}.zip s3://${{ env.LAMBDA_S3_BUCKET_NAME }}/${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip
+
+    outputs:
+      lambda_s3_bucket_name: "${{ env.LAMBDA_S3_BUCKET_NAME }}"
+      lambda_s3_bucket_path: "${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip"
+
+  _1_int_plan:
+    needs: [ _0_build ]
+    name: 1. Plan on INT
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development-READONLY 
+      TERRAFORM_ENVIRONMENT: int
+      TERRAFORM_ACTION: PLAN
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  _2_int_deploy:
+    needs: [ _0_build, _1_int_plan ]
+    name: 2. Deploy on INT
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development 
+      TERRAFORM_ENVIRONMENT: int
+      TERRAFORM_ACTION: APPLY
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  _3_stage_plan:
+    needs: [ _0_build, _2_int_deploy]
+    name: 3. Plan on STAGE
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development-READONLY
+      TERRAFORM_ENVIRONMENT: stage
+      TERRAFORM_ACTION: PLAN
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  _4_stage_deploy:
+    needs: [ _0_build, _3_stage_plan ]
+    name: 4. Deploy on STAGE
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development 
+      TERRAFORM_ENVIRONMENT: stage
+      TERRAFORM_ACTION: APPLY
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  _5_production_plan:
+    needs: [ _0_build, _4_stage_deploy ]
+    name: 5. Plan on PRODUCTION
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development-READONLY
+      TERRAFORM_ENVIRONMENT: prod
+      TERRAFORM_ACTION: PLAN
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  _6_production_deploy:
+    needs: [ _0_build, _5_production_plan ]
+    name: 6. Deploy on PRODUCTION
+    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: Development 
+      TERRAFORM_ENVIRONMENT: prod
+      TERRAFORM_ACTION: APPLY
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+ 
