@@ -1,0 +1,28 @@
+name: Env input TF
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        description: TF Action
+        options: 
+        - PLAN
+        - APPLY
+      environment:
+        type: environment
+
+jobs:
+  terraform:
+    # needs: [ _0_build ]
+    name: Terraform
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
+    with:
+      GHA_ENVIRONMENT: ${{ github.event.inputs.environment }}
+      TERRAFORM_ENVIRONMENT: int
+      TERRAFORM_ACTION: ${{ github.event.inputs.action }}
+      TF_VAR_lambda_s3_bucket_name: "" #"${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "" #"${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -1,4 +1,4 @@
-name: Reusable Workflows Example 2 - Build and Deploy (LATEST)
+name: Reusable Workflows & Envs - Build and Deploy (LATEST)
 
 on:
   # Allows you to run this workflow manually from the Actions tab
