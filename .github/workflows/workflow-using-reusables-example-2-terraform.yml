@@ -74,7 +74,7 @@ jobs:
   _1_int_plan:
     needs: [ _0_build ]
     name: 1. Plan on INT
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development-READONLY 
       TERRAFORM_ENVIRONMENT: int
@@ -89,7 +89,7 @@ jobs:
   _2_int_deploy:
     needs: [ _0_build, _1_int_plan ]
     name: 2. Deploy on INT
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development 
       TERRAFORM_ENVIRONMENT: int
@@ -104,7 +104,7 @@ jobs:
   _3_stage_plan:
     needs: [ _0_build, _2_int_deploy]
     name: 3. Plan on STAGE
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development-READONLY
       TERRAFORM_ENVIRONMENT: stage
@@ -119,7 +119,7 @@ jobs:
   _4_stage_deploy:
     needs: [ _0_build, _3_stage_plan ]
     name: 4. Deploy on STAGE
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development 
       TERRAFORM_ENVIRONMENT: stage
@@ -134,7 +134,7 @@ jobs:
   _5_production_plan:
     needs: [ _0_build, _4_stage_deploy ]
     name: 5. Plan on PRODUCTION
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development-READONLY
       TERRAFORM_ENVIRONMENT: prod
@@ -149,7 +149,7 @@ jobs:
   _6_production_deploy:
     needs: [ _0_build, _5_production_plan ]
     name: 6. Deploy on PRODUCTION
-    uses: ben-poole/gha-environments/reusable-workflow-example-2-terraform.yml@main
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-2-terraform.yml@main
     with:
       GHA_ENVIRONMENT: Development 
       TERRAFORM_ENVIRONMENT: prod
