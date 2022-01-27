@@ -4,9 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "'get' or 'put'"
+        type: choice
+        description: "'get' or 'put' a param"
         required: true
-        default: "get"
+        options: 
+        - get
+        - put
       param-name:
         description: "The name of the parameter to Get or Put"
         required: true
