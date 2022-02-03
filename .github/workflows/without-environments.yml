@@ -15,6 +15,9 @@ on:
         - 5-plan-prod
         - 6-deploy-prod
 
+concurrency:
+  group: deploy
+
 jobs:
   _0_build:
     name: 0. Build, Audit, Test & Package
@@ -128,11 +131,14 @@ jobs:
           action: "put"
           param-name: "/int/planned"
           param-value: ${{ github.sha }}
+    outputs:
+      action_run: ${{ steps.action.outputs.action_run }}
 
   _2_int_deploy:
     name: 2. Deploy on INT   
     runs-on: ubuntu-latest
     needs: [ _0_build, _1_int_plan ]
+    if: needs._1_int_plan.outputs.action_run != 'true'
     env:
       AWS_DEFAULT_REGION: eu-west-1
       AWS_ACCESS_KEY_ID: ${{ secrets.INT_AWS_ACCESS_KEY_ID }}
