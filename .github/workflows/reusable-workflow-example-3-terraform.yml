@@ -1,0 +1,95 @@
+name: RW - Example 3 - Terraform
+
+on:
+  workflow_call:
+    inputs:
+      TERRAFORM_ACTION:
+        required: true
+        type: string
+      TERRAFORM_ENVIRONMENT:
+        required: true
+        type: string
+      TF_VAR_lambda_s3_bucket_name:
+        required: true
+        type: string
+      TF_VAR_lambda_s3_bucket_path:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+    outputs:
+      action_run:
+        description: "action_run"
+        value: ${{ jobs.terraform.outputs.action_run }}
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    timeout-minutes: 10
+    env:
+      AWS_DEFAULT_REGION: "eu-west-1"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TERRAFORM_BACKEND_BUCKET: "gha-envs-example-tf-state-bucket-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+      TERRAFORM_BACKEND_PATH: "gha-envs-example-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+      TERRAFORM_TF_VARS_FILE: "${{ inputs.TERRAFORM_ENVIRONMENT }}.tfvars"
+      TERRAFORM_BACKEND_REGION: "eu-west-1"
+      TF_VAR_lambda_s3_bucket_name: ${{ inputs.TF_VAR_lambda_s3_bucket_name }}
+      TF_VAR_lambda_s3_bucket_path: ${{ inputs.TF_VAR_lambda_s3_bucket_path }}
+    outputs:
+      action_run: ${{ steps.action.outputs.action_run }} 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.0
+
+      - name: Get Environment Status
+        id: check-env-status
+        uses: ben-poole/param-store-javascript-action@v6
+        with:
+          action: "get"
+          param-name: "/${{ inputs.TERRAFORM_ENVIRONMENT }}/planned"
+
+      - name: Check Deployment Status
+        # Fail if plan already run on env
+        if: steps.check-env-status.outputs.param-value == github.sha && github.event.inputs.action == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        run: |
+          echo "::error::Plan already run on ${{ inputs.TERRAFORM_ENVIRONMENT }}"
+          exit 1
+
+      - name: Check Deployment Order
+        # Fail if user does not follow deployment order
+        if: steps.check-env-status.outputs.param-value != github.sha && github.event.inputs.action != "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        run: |
+          echo "::error::Please run "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}" before ${{ github.event.inputs.action }}"
+          exit 1
+
+      - name: Plan on ${{ inputs.TERRAFORM_ENVIRONMENT }}
+        id: action
+        # Run plan on ${{ inputs.TERRAFORM_ENVIRONMENT }} if changes have been made and requested by user
+        if: steps.check-env-status.outputs.param-value != github.sha && github.event.inputs.action == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        shell: bash
+        run: |
+          echo "Planning on ${{ inputs.TERRAFORM_ENVIRONMENT }}"
+          echo "::set-output name=action_run::$(echo 'true')"
+  
+      - name: Update Environment Status
+        if: steps.action.outputs.action_run == 'true'
+        uses: ben-poole/param-store-javascript-action@v6
+        with:
+          action: "put"
+          param-name: "/${{ inputs.TERRAFORM_ENVIRONMENT }}/planned"
+          param-value: ${{ github.sha }}

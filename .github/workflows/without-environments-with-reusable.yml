@@ -1,4 +1,4 @@
-name: Without Environments
+name: Without Environments reusable
 
 on:
   workflow_dispatch:
@@ -85,56 +85,20 @@ jobs:
     outputs:
       lambda_s3_bucket_name: "${{ env.LAMBDA_S3_BUCKET_NAME }}"
       lambda_s3_bucket_path: "${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip"
-
+    
   _1_int_plan:
-    name: 1. Plan on INT   
-    runs-on: ubuntu-latest
     needs: [ _0_build ]
-    env:
-      AWS_DEFAULT_REGION: eu-west-1
+    name: 1. Plan on INT
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-3-terraform.yml@main
+    with:
+      TERRAFORM_ENVIRONMENT: int
+      TERRAFORM_ACTION: PLAN
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.INT_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.INT_AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - name: Get Environment Status
-        id: ssm-int-planned
-        uses: ben-poole/param-store-javascript-action@v6
-        with:
-          action: "get"
-          param-name: "/int/planned"
-
-      - name: Check Deployment Status
-        # Fail if plan already run on int
-        if: steps.ssm-int-planned.outputs.param-value == github.sha && github.event.inputs.action == '1-plan-int'
-        run: |
-          echo "::error::Plan already run on INT"
-          exit 1
-
-      - name: Check Deployment Order
-        # Fail if user does not follow deployment order
-        if: steps.ssm-int-planned.outputs.param-value != github.sha && github.event.inputs.action != '1-plan-int'
-        run: |
-          echo "::error::Please run '1-plan-int' before '${{ github.event.inputs.action }}'"
-          exit 1
-
-      - name: Plan on INT
-        id: action
-        # Run plan on int if changes have been made and requested by user
-        if: steps.ssm-int-planned.outputs.param-value != github.sha && github.event.inputs.action == '1-plan-int'
-        shell: bash
-        run: |
-          echo "Planning on INT"
-          echo "::set-output name=action_run::$(echo 'true')"
-  
-      - name: Update Environment Status
-        if: steps.action.outputs.action_run == 'true'
-        uses: ben-poole/param-store-javascript-action@v6
-        with:
-          action: "put"
-          param-name: "/int/planned"
-          param-value: ${{ github.sha }}
-
-    outputs:
-      action_run: ${{ steps.action.outputs.action_run }}
 
   _2_int_deploy:
     name: 2. Deploy on INT   
