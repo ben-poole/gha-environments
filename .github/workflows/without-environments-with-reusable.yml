@@ -93,6 +93,7 @@ jobs:
     with:
       TERRAFORM_ENVIRONMENT: int
       TERRAFORM_ACTION: PLAN
+      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
       # These vars are the same for all jobs
       TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
       TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
@@ -101,49 +102,17 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.INT_AWS_SECRET_ACCESS_KEY }}
 
   _2_int_deploy:
-    name: 2. Deploy on INT   
-    runs-on: ubuntu-latest
+    name: 2. Deploy on INT
     needs: [ _0_build, _1_int_plan ]
     if: needs._1_int_plan.outputs.action_run != 'true'
-    env:
-      AWS_DEFAULT_REGION: eu-west-1
+    uses: ben-poole/gha-environments/.github/workflows/reusable-workflow-example-3-terraform.yml@main
+    with:
+      TERRAFORM_ENVIRONMENT: int
+      TERRAFORM_ACTION: APPLY
+      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
+      # These vars are the same for all jobs
+      TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
+      TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
+    secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.INT_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.INT_AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - name: Get Environment Status
-        id: ssm-int-deployed
-        uses: ben-poole/param-store-javascript-action@v6
-        with:
-          action: "get"
-          param-name: "/int/deployed"
-
-      - name: Check Deployment Status
-        # Fail if plan already run on int
-        if: steps.ssm-int-deployed.outputs.param-value == github.sha && github.event.inputs.action == '2-deploy-int'
-        run: |
-          echo "::error::Plan already run on INT"
-          exit 1
-
-      - name: Check Deployment Order
-        # Fail if user does not follow deployment order
-        if: steps.ssm-int-deployed.outputs.param-value != github.sha && github.event.inputs.action != '2-deploy-int'
-        run: |
-          echo "::error::Please run '2-deploy-int' before '${{ github.event.inputs.action }}'"
-          exit 1
-
-      - name: Deploy on INT
-        id: action
-        # Run plan on int if changes have been made and requested by user
-        if: steps.ssm-int-deployed.outputs.param-value != github.sha && github.event.inputs.action == '2-deploy-int'
-        shell: bash
-        run: |
-          echo "Deploying on INT"
-          echo "::set-output name=action_run::$(echo 'true')"
-  
-      - name: Update Environment Status
-        if: steps.action.outputs.action_run == 'true'
-        uses: ben-poole/param-store-javascript-action@v6
-        with:
-          action: "put"
-          param-name: "/int/deployed"
-          param-value: ${{ github.sha }}
