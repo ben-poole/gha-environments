@@ -102,11 +102,4 @@ jobs:
 
       - name: Get the param output
         run: echo "The param value ${{ steps.ssm-int-planned.outputs.param-value }}"
-
-      - name: Get Environment Status
-        id: ssm-int-planned
-        uses: ./.github/actions/aws-ssm-parameter-store
-        with:
-          action: "get"
-          param-name: "/int/planned"
   
