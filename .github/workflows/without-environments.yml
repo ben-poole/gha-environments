@@ -16,7 +16,7 @@ on:
         - 6-deploy-prod
 
 jobs:
-  0_build:
+  _0_build:
     name: 0. Build, Audit, Test & Package
     runs-on: ubuntu-latest
     env:
@@ -86,7 +86,7 @@ jobs:
   _1_int_plan:
     name: 1. Plan on INT   
     runs-on: ubuntu-latest
-    needs: [ 0_build ]
+    needs: [ _0_build ]
     steps:
       - name: Get Environment Status
         id: ssm-int-planned
