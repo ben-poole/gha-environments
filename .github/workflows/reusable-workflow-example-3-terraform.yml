@@ -70,7 +70,7 @@ jobs:
         # Fail if plan already run on env
         if: steps.check-env-status.outputs.param-value == github.sha && inputs.WORKFLOW_TERRAFORM_ACTION == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
         run: |
-          echo "::error::Plan already run on ${{ inputs.TERRAFORM_ENVIRONMENT }} . Action: '${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}' SHA: ${{ github.sha }}"
+          echo "::error::Plan already run on ${{ inputs.TERRAFORM_ENVIRONMENT }} . Action: '${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}' SHA: '${{ github.sha }}' Env status SHA: '${{ steps.check-env-status.outputs.param-value }}'"
           exit 1
 
       - name: Check Deployment Order
