@@ -1,0 +1,92 @@
+name: Without Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        description: "The deployment action"
+        required: true
+        options: 
+        - 1-plan-int
+        - 2-deploy-int
+        - 3-plan-uat
+        - 4-deploy-uat
+        - 5-plan-prod
+        - 6-deploy-prod
+
+jobs:
+  0_build:
+    name: 0. Build, Audit, Test & Package
+    runs-on: ubuntu-latest
+    env:
+      LAMBDA_S3_BUCKET_NAME: "gha-envs-example-artifacts"
+    timeout-minutes: 5
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.5
+        with:
+          persist-credentials: false
+
+      - name: Extract info
+        run: |
+          echo "##[set-output name=sha;]$(git log --oneline --format=format:%h -- . | head -1)"
+        id: extract_info
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Build
+        run: |
+          echo "Building"
+          #echo "//npm.pkg.github.com/:_authToken=${{ secrets.CUSTOM_PAT }}" >> ~/.npmrc
+          #echo "@ben-poole:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+          #rm -rf ./node_modules/ && rm -rf ./dist/
+          #npm run clean
+          #npm ci
+          #npm run build
+
+      #- name: Audit
+      #  run: |
+      #    @todo npm/yarn audit
+
+      #- name: Test
+      #  run: |
+      #    npx jest
+      #    echo "Exited with '$?'"
+
+      - name: Package
+        run: |
+          echo "Packaging lambdas etc"
+          #npm prune --production
+          #cp -r node_modules dist/
+          #cd dist/
+          #zip ../my-lambda-${{ steps.extract_info.outputs.sha }}.zip * -r
+          #cd ../
+          #rm -rf dist/
+
+      - name: Upload 
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          #AWS_ACCESS_KEY_ID: ${{ secrets.BUILD_USER_AWS_ACCESS_KEY_ID }}
+          #AWS_SECRET_ACCESS_KEY: ${{ secrets.BUILD_USER_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "Uploading lambdas to S3 and images to ECR"
+          #aws s3 cp my-lambda-${{ steps.extract_info.outputs.sha }}.zip s3://${{ env.LAMBDA_S3_BUCKET_NAME }}/${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip
+
+    outputs:
+      lambda_s3_bucket_name: "${{ env.LAMBDA_S3_BUCKET_NAME }}"
+      lambda_s3_bucket_path: "${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip"
+
+  _1_int_plan:
+    needs: [ 0_build ]
+    name: 1. Plan on INT   
+    steps:
+      - name: Plan on INT
+        run: |
+          echo "Planning on INT"
+         
+  
