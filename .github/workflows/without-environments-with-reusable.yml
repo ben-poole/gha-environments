@@ -8,12 +8,12 @@ on:
         description: "The deployment action"
         required: true
         options: 
-        - 1-plan-int
-        - 2-deploy-int
-        - 3-plan-uat
-        - 4-deploy-uat
-        - 5-plan-prod
-        - 6-deploy-prod
+        - PLAN-int
+        - DEPLOY-int
+        - PLAN-uat
+        - DEPLOY-uat
+        - PLAN-prod
+        - DEPLOY-prod
 
 concurrency:
   group: deploy
