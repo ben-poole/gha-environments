@@ -69,11 +69,17 @@ jobs:
       - name: Check Deployment Status DEBUG1
         run: |
           echo "1: if: ${{ steps.check-env-status.outputs.param-value}} == ${{ github.sha }}"
+          echo "1: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
 
       - name: Check Deployment Status DEBUG2
         if: steps.check-env-status.outputs.param-value == github.sha
         run: |
           echo "2: if: ${{ steps.check-env-status.outputs.param-value}} == ${{ github.sha }}"
+
+      - name: Check Deployment Status DEBUG3
+        if: inputs.WORKFLOW_TERRAFORM_ACTION == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        run: |
+          echo "3: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
 
       - name: Check Deployment Status
         # Fail if plan already run on env
