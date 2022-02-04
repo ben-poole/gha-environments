@@ -44,6 +44,7 @@ jobs:
       TERRAFORM_BACKEND_PATH: "gha-envs-example-${{ inputs.TERRAFORM_ENVIRONMENT }}"
       TERRAFORM_TF_VARS_FILE: "${{ inputs.TERRAFORM_ENVIRONMENT }}.tfvars"
       TERRAFORM_BACKEND_REGION: "eu-west-1"
+      JOB: "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
       TF_VAR_lambda_s3_bucket_name: ${{ inputs.TF_VAR_lambda_s3_bucket_name }}
       TF_VAR_lambda_s3_bucket_path: ${{ inputs.TF_VAR_lambda_s3_bucket_path }}
     outputs:
@@ -69,7 +70,7 @@ jobs:
       - name: Check Deployment Status DEBUG1
         run: |
           echo "1: if: ${{ steps.check-env-status.outputs.param-value}} == ${{ github.sha }}"
-          echo "1: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+          echo "1: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ env.JOB }}"
 
       - name: Check Deployment Status DEBUG2
         if: steps.check-env-status.outputs.param-value == github.sha
@@ -77,28 +78,28 @@ jobs:
           echo "2: if: ${{ steps.check-env-status.outputs.param-value}} == ${{ github.sha }}"
 
       - name: Check Deployment Status DEBUG3
-        if: inputs.WORKFLOW_TERRAFORM_ACTION == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        if: inputs.WORKFLOW_TERRAFORM_ACTION == env.JOB
         run: |
-          echo "3: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+          echo "3: ${{ inputs.WORKFLOW_TERRAFORM_ACTION }} == ${{ env.JOB }}"
 
       - name: Check Deployment Status
         # Fail if plan already run on env
-        if: steps.check-env-status.outputs.param-value == github.sha && inputs.WORKFLOW_TERRAFORM_ACTION == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        if: steps.check-env-status.outputs.param-value == github.sha && inputs.WORKFLOW_TERRAFORM_ACTION == env.JOB
         run: |
-          echo "::error::Plan already run on ${{ inputs.TERRAFORM_ENVIRONMENT }} . Action: '${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}' SHA: '${{ github.sha }}' Env status SHA: '${{ steps.check-env-status.outputs.param-value }}'"
+          echo "::error::Plan already run on ${{ inputs.TERRAFORM_ENVIRONMENT }} . Action: '${{ env.JOB }}' SHA: '${{ github.sha }}' Env status SHA: '${{ steps.check-env-status.outputs.param-value }}'"
           exit 1
 
       - name: Check Deployment Order
         # Fail if user does not follow deployment order
-        if: steps.check-env-status.outputs.param-value != github.sha && inputs.WORKFLOW_TERRAFORM_ACTION != "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        if: steps.check-env-status.outputs.param-value != github.sha && inputs.WORKFLOW_TERRAFORM_ACTION != env.JOB
         run: |
-          echo "::error::Please run "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}" before ${{ inputs.WORKFLOW_TERRAFORM_ACTION }}"
+          echo "::error::Please run "${{ env.JOB }}" before ${{ inputs.WORKFLOW_TERRAFORM_ACTION }}"
           exit 1
 
       - name: Plan on ${{ inputs.TERRAFORM_ENVIRONMENT }}
         id: action
         # Run plan on ${{ inputs.TERRAFORM_ENVIRONMENT }} if changes have been made and requested by user
-        if: steps.check-env-status.outputs.param-value != github.sha && inputs.WORKFLOW_TERRAFORM_ACTION == "${{ inputs.TERRAFORM_ACTION }}-${{ inputs.TERRAFORM_ENVIRONMENT }}"
+        if: steps.check-env-status.outputs.param-value != github.sha && inputs.WORKFLOW_TERRAFORM_ACTION == env.JOB
         shell: bash
         run: |
           echo "Planning on ${{ inputs.TERRAFORM_ENVIRONMENT }}"
