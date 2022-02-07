@@ -3,15 +3,15 @@ name: Without Environments reusable
 on:
   workflow_dispatch:
     inputs:
-      action:
+      selected_operation:
         type: choice
-        description: "The deployment action"
+        description: "The deployment operation to perform"
         required: true
         options: 
         - PLAN-int
         - DEPLOY-int
-        - PLAN-uat
-        - DEPLOY-uat
+        - PLAN-stage
+        - DEPLOY-stage
         - PLAN-prod
         - DEPLOY-prod
 
@@ -93,7 +93,7 @@ jobs:
     with:
       TERRAFORM_ENVIRONMENT: int
       TERRAFORM_ACTION: PLAN
-      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
+      SELECTED_OPERATION: "${{ github.event.inputs.selected_operation }}"
       # These vars are the same for all jobs
       TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
       TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
@@ -109,7 +109,7 @@ jobs:
     with:
       TERRAFORM_ENVIRONMENT: int
       TERRAFORM_ACTION: APPLY
-      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
+      SELECTED_OPERATION: "${{ github.event.inputs.selected_operation }}"
       # These vars are the same for all jobs
       TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
       TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
@@ -125,7 +125,7 @@ jobs:
     with:
       TERRAFORM_ENVIRONMENT: stage
       TERRAFORM_ACTION: PLAN
-      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
+      SELECTED_OPERATION: "${{ github.event.inputs.selected_operation }}"
       # These vars are the same for all jobs
       TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
       TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
@@ -141,7 +141,7 @@ jobs:
     with:
       TERRAFORM_ENVIRONMENT: stage
       TERRAFORM_ACTION: APPLY
-      WORKFLOW_TERRAFORM_ACTION: "${{ github.event.inputs.action }}"
+      SELECTED_OPERATION: "${{ github.event.inputs.selected_operation }}"
       # These vars are the same for all jobs
       TF_VAR_lambda_s3_bucket_name: "${{ needs._0_build.outputs.lambda_s3_bucket_name }}"
       TF_VAR_lambda_s3_bucket_path: "${{ needs._0_build.outputs.lambda_s3_bucket_path }}"
