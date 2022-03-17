@@ -16,6 +16,19 @@ jobs:
       # Use the output from the `hello` step
       - name: Get the output time
         run: echo "The time was ${{ steps.hello.outputs.time }}"
+      - name: Check previous env sha
+        id: check-previous-env-sha
+        run: |
+          paramName="current-sha-int-PLAN"
+          echo "param to check is: '$paramName'"
+          if [ $paramName != "" ]; then
+            echo "checking param store for sha '$paramName'"
+            echo "aws ssm get-parameters --names $paramName"
+            aws ssm get-parameters --names $paramName --debug
+            ssm=$(aws ssm get-parameters --names "${paramName}")
+            sha=$(echo $ssm | jq --arg pn "${paramName}" -r '.Parameters[] | select(.Name == $pn) | .Value')
+            echo "sha from param store is: ${sha}"
+          fi
         
   Build:
     runs-on: ubuntu-latest
