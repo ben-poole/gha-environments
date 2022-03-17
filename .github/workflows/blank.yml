@@ -19,6 +19,7 @@ jobs:
       - name: Check previous env sha
         id: check-previous-env-sha
         run: |
+          export AWS_DEFAULT_REGION=eu-west-1
           paramName="current-sha-int-PLAN"
           echo "param to check is: '$paramName'"
           if [ $paramName != "" ]; then
