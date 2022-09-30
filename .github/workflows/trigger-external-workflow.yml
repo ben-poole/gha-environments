@@ -1,0 +1,12 @@
+name: Trigger another workflow
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run param_store.yml --repo ben-poole/gha-environments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
