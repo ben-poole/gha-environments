@@ -7,6 +7,6 @@ jobs:
   comment:
     runs-on: ubuntu-latest
     steps:
-      - run: gh workflow run param_store.yml --repo ben-poole/gha-environments
+      - run: gh workflow run hello.yml --repo ben-poole/github-actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
