@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   
 jobs:
-  comment:
+  trigger-external-workflow:
     runs-on: ubuntu-latest
     steps:
       - run: gh workflow run hello.yml --repo ben-poole/github-actions
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
