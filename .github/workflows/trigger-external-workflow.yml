@@ -9,4 +9,4 @@ jobs:
     steps:
       - run: gh workflow run hello.yml --repo ben-poole/github-actions
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
