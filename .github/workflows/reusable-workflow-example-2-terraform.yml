@@ -48,6 +48,7 @@ jobs:
       TERRAFORM_BACKEND_REGION: "eu-west-1"
       TF_VAR_lambda_s3_bucket_name: ${{ inputs.TF_VAR_lambda_s3_bucket_name }}
       TF_VAR_lambda_s3_bucket_path: ${{ inputs.TF_VAR_lambda_s3_bucket_path }}
+      ROLE_TO_ASSUME: ${{ vars.ROLE_TO_ASSUME }}
     outputs:
       output1: ${{ steps.output1.outputs.output1 }}      
     steps:
@@ -56,6 +57,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Check var
+        run: echo ${{ env.ROLE_TO_ASSUME }}
+        
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
