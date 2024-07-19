@@ -65,7 +65,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.BUILD_USER_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.BUILD_USER_AWS_SECRET_ACCESS_KEY }}
         run: |
-          aws s3 cp my-lambda-${{ steps.extract_info.outputs.sha }}.zip s3://${{ env.LAMBDA_S3_BUCKET_NAME }}/${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip
+          #aws s3 cp my-lambda-${{ steps.extract_info.outputs.sha }}.zip s3://${{ env.LAMBDA_S3_BUCKET_NAME }}/${{ github.event.repository.name }}/my-lambda-${{ steps.extract_info.outputs.sha }}.zip
 
     outputs:
       lambda_s3_bucket_name: "${{ env.LAMBDA_S3_BUCKET_NAME }}"
