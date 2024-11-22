@@ -1,0 +1,15 @@
+name: Aerated
+
+on:
+  workflow_dispatch:
+
+jobs:
+  aerated:
+    runs-on: ubuntu-latest
+    name: Install aerated package
+    steps:
+      - name: Install
+        id: installe
+        run: |
+          export AWS_DEFAULT_REGION=eu-west-1
+          npm install @aerstudios/aerated-aertabs@2.4.0
